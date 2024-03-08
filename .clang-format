@@ -1,0 +1,40 @@
+# Common
+
+Language: Cpp
+Standard: c++20
+UseTab: Never
+ColumnLimit: 80
+IndentWidth: 4
+
+IndentAccessModifiers: false
+AccessModifierOffset: -4
+BreakBeforeBraces: Stroustrup
+#AllowAllArgumentsOnNextLine: true
+#AllowAllParametersOfDeclarationOnNextLine: true
+#BinPackArguments: true
+#BinPackParameters: true
+
+# Classes
+
+BreakConstructorInitializers: AfterColon
+
+# Spaces
+
+PointerAlignment: Middle
+ReferenceAlignment: Middle
+
+#SpaceBeforeParens: Custom
+#SpaceBeforeParensOptions:
+#    AfterControlStatements: true
+#    AfterFunctionDeclarationName: true
+#    AfterFunctionDefinitionName: true
+#    AfterOverloadedOperator: true
+#    AfterPlacementOperator: true
+#    AfterRequiresInExpression: true
+
+SpaceBeforeRangeBasedForLoopColon: true
+
+
+# Penalties
+
+PenaltyReturnTypeOnItsOwnLine: 200
