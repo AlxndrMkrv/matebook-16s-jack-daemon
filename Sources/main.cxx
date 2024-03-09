@@ -1,12 +1,12 @@
+#include "EventDev.hxx"
 #include "Globals.hxx"
+#include "Poll.hxx"
 #include "Terminate.hxx"
 #include <filesystem>
 #include <format>
 #include <fstream>
 #include <iostream>
 #include <string>
-
-import Wrappers;
 
 namespace fs = std::filesystem;
 
@@ -64,6 +64,13 @@ int main()
         terminate(std::format("failed to open {}: {}", dev_filename.string(),
                               fd.error()));
 
-    std::cout << "All done!\n";
     Poll poll{fd, 500};
+
+    while (!StopRequested) {
+
+        switch (poll.run()) {
+        case Poll::Result::TIMEOUT:
+            break;
+        }
+    }
 }
