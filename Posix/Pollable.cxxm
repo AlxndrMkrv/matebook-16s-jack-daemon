@@ -1,0 +1,12 @@
+module;
+
+export module Posix:Pollable;
+
+export class Pollable {
+public:
+
+    //virtual ~Pollable() = default;
+
+    [[nodiscard]] virtual int fd() const = 0;
+    virtual void onDataReady() = 0;
+};

@@ -1,0 +1,20 @@
+module;
+
+#include <exception>
+#include <string>
+
+export module Posix:Exception;
+
+export class Exception : public std::runtime_error
+{
+public:
+    Exception(std::string_view & s) noexcept : _message(s) {}
+
+    const char* what() const override noexcept
+    {
+        return _message.c_str();
+    }
+
+private:
+    std::string _message;
+}

@@ -14,6 +14,9 @@ BreakBeforeBraces: Stroustrup
 #BinPackArguments: true
 #BinPackParameters: true
 
+# Templates
+AlwaysBreakTemplateDeclarations: true # deprecated after 19
+
 # Classes
 
 BreakConstructorInitializers: AfterColon

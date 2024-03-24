@@ -1,0 +1,26 @@
+module;
+
+#include <cstddef>
+
+export module Posix;
+
+import :File;
+import :HdaDevice;
+import :InputEvent;
+import :Pipe;
+import :Poll;
+import :Pollable;
+import :Signal;
+
+export class File;
+export class HdaDevice;
+export class InputEvent;
+export class Pipe;
+export template <size_t N>
+class Poll;
+export class Pollable;
+export class Signal;
+
+// export bool HdaVerb::check_version(int, std::string_view &);
+// export bool HdaVerb::on_jack_inserted(int, std::string_view &);
+// export bool HdaVerb::on_jack_removed(int, std::string_view &);

@@ -1,0 +1,49 @@
+module;
+
+#include <cerrno>
+#include <csignal>
+#include <cstring>
+#include <format>
+
+export module Posix:Signal;
+
+export class Signal {
+public:
+    enum class Type { INT = SIGINT, TERM = SIGTERM };
+
+    using THandler = void(int);
+
+    static void BlockAll();
+    static void Assign(Type signal, THandler & handler);
+
+    static const char * const SigName(int signal) noexcept;
+};
+
+void Signal::BlockAll()
+{
+    sigset_t mask;
+
+    if (sigemptyset(&mask) < 0)
+        throw std::runtime_error(std::format(
+            "Failed to set empty signal mask: {}", std::strerror(errno)));
+
+    if (sigprocmask(SIG_SETMASK, &mask, nullptr) < 0)
+        throw std::runtime_error(
+            std::format("Failed to set signal mask: {}", std::strerror(errno)));
+}
+
+void Signal::Assign(Type signal, THandler & handler)
+{
+    struct ::sigaction action;
+    action.sa_handler = &handler;
+
+    if (::sigaction(static_cast<int>(signal), &action, nullptr) < 0)
+        throw std::runtime_error(std::format(
+            "Failed to assign action to signal {}: {}",
+            SigName(static_cast<int>(signal)), std::strerror(errno)));
+}
+
+const char * const Signal::SigName(int signal) noexcept
+{
+    return strsignal(signal);
+}

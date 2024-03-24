@@ -1,0 +1,99 @@
+module;
+
+#include <array>
+#include <cerrno>
+#include <cstring>
+#include <fcntl.h>
+#include <format>
+#include <linux/limits.h>
+#include <string>
+#include <unistd.h>
+
+export module Posix:Pipe;
+
+export class Pipe {
+public:
+    enum class Type { READ, WRITE };
+
+    static void Connect(Pipe & write_end, Pipe & read_end);
+
+    Pipe(Type type) : _type(type) {}
+
+    inline operator int() const { return _fd; }
+
+    void read(std::string & s);
+
+    void write(const std::string & s);
+
+private:
+    Type _type;
+    int _fd = -1;
+};
+
+void Pipe::Connect(Pipe & write_end, Pipe & read_end)
+{
+    if (&read_end == &write_end)
+        throw std::runtime_error("Impossible to connect the pipe to itself");
+    else if (read_end._type != Type::READ)
+        throw std::runtime_error("Invalid Pipe::Type of the read end");
+    else if (write_end._type != Type::WRITE)
+        throw std::runtime_error("Invalid Pipe::Type of the write end");
+
+    std::array<int, 2> fds{-1, -1};
+
+    /* O_CLOEXEC is recommended but i don't understand in which cases
+     *     /dev/input/eventX may be exec()'ed
+     * O_DIRECT for splitting the data into packets when write() oversizes
+     *     PIPE_BUF
+     * O_NONBLOCK to be not so worried about blocking on misread
+     */
+
+    if (pipe2(fds.data(), O_CLOEXEC | O_DIRECT | O_NONBLOCK) < 0)
+        throw std::runtime_error(
+            std::format("Failed to connect pipe ends {} and {}: {}",
+                        read_end._fd, write_end._fd, std::strerror(errno)));
+
+    read_end._fd = fds[0];
+    write_end._fd = fds[1];
+}
+
+void Pipe::read(std::string & s)
+{
+    s.clear();
+
+    if (_type != Type::READ)
+        throw std::runtime_error(
+            std::format("Failed to read from pipe {}: no permissions", _fd));
+
+    static constexpr size_t size = std::min(128, PIPE_BUF);
+    std::array<char, size> buf{};
+
+    ssize_t rd_size = -1;
+    do {
+        rd_size = ::read(_fd, &buf, size);
+
+        if (rd_size < 0)
+            std::runtime_error(
+                std::format("Failed to read data from pipe {}: {}", _fd,
+                            std::strerror(errno)));
+
+        s.append(buf.data());
+    } while (rd_size == size && buf[size - 1] != '\0');
+}
+
+void Pipe::write(const std::string & s)
+{
+    if (_type != Type::WRITE)
+        throw std::runtime_error(
+            std::format("Failed to write {} chars to pipe {}: no permissions",
+                        s.size(), _fd));
+
+    if (s.empty())
+        throw std::runtime_error(
+            std::format("Failed to write empty string to pipe {}", _fd));
+
+    if (::write(_fd, s.c_str(), s.size() + 1) < 0)
+        throw std::runtime_error(
+            std::format("Failed to write {} chars to pipe {}: {}", s.size(),
+                        _fd, std::strerror(errno)));
+}

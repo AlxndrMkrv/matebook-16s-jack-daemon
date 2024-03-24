@@ -1,0 +1,81 @@
+module;
+
+#include <cerrno>
+#include <cstring>
+#include <exception>
+#include <fcntl.h>
+#include <filesystem>
+#include <format>
+#include <unistd.h>
+
+export module Posix:File;
+
+export class File {
+public:
+    enum class Access { READ = O_RDONLY, WRITE = O_WRONLY, RW = O_RDWR };
+
+    File(const File &) = delete;
+
+    explicit File(const std::filesystem::path & path, Access access);
+
+    ~File();
+
+    [[nodiscard]] inline bool ready() const { return _fd >= 0; }
+
+    [[nodiscard]] inline std::filesystem::path path() const { return _path; }
+
+    template <class T> void read(T & buf) const;
+
+    inline operator int() const { return _fd; }
+
+private:
+    static const char * const AccessName(const Access & access);
+
+private:
+    int _fd;
+    std::filesystem::path _path;
+};
+
+File::File(const std::filesystem::path & path, Access access) :
+    _fd(open(path.string().c_str(), static_cast<int>(access))), _path(path)
+{
+    if (_fd < 0)
+        throw std::runtime_error(std::format(
+            "Failed to open {} with \"{}\" permissions: {}", path.string(),
+            AccessName(access), std::strerror(errno)));
+}
+
+File::~File()
+{
+    if (_fd >= 0)
+        close(_fd);
+}
+
+template <class T> void File::read(T & buf) const
+{
+    ssize_t bytes = ::read(_fd, static_cast<void *>(&buf), sizeof(buf));
+
+    if (bytes < 0) [[unlikely]]
+        throw std::runtime_error(std::format("Failed to read from {}: {}",
+                                             path().string(),
+                                             std::strerror(errno)));
+    else if (bytes != sizeof(buf)) [[unlikely]]
+        throw std::runtime_error(
+            std::format("Failed to read from {}: has to read {} bytes, but "
+                        "got {}",
+                        path().string(), sizeof(buf), bytes));
+}
+
+const char * const File::AccessName(const Access & access)
+{
+    switch (access) {
+    case Access::READ:
+        return "r";
+    case Access::WRITE:
+        return "w";
+    case Access::RW:
+        return "rw";
+    default:
+        return "invalid permission";
+    }
+}

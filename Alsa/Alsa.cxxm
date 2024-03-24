@@ -1,0 +1,65 @@
+module;
+
+// Headers must be included in a certain order
+// clang-format off
+#include <cstdio>
+#include <cstring>
+#include <alsa/global.h>
+#include <alsa/error.h>
+#include <alsa/input.h>
+#include <alsa/output.h>
+#include <alsa/conf.h>
+#include <alsa/control.h>
+#include <alsa/pcm.h>
+#include <alsa/mixer.h>
+#include <exception>
+#include <format>
+// clang-format on
+
+export module Alsa;
+
+constexpr const char * const Card = "default";
+
+export bool IsJackConnected()
+{
+    snd_mixer_t * mixer = nullptr;
+    int err = 0;
+    if ((err = snd_mixer_open(&mixer, 0)) < 0)
+        throw std::runtime_error(
+            std::format("Failed to open the mixer: {}", snd_strerror(err)));
+
+    if ((err = snd_mixer_attach(mixer, Card)) < 0)
+        throw std::runtime_error(
+            std::format("Failed to attach mixer to card \"{}\": {}", Card,
+                        snd_strerror(err)));
+
+    if ((err = snd_mixer_selem_register(mixer, nullptr, nullptr)) < 0)
+        throw std::runtime_error(
+            std::format("Failed to register mixer: {}", snd_strerror(err)));
+
+    if ((err = snd_mixer_load(mixer)) < 0)
+        throw std::runtime_error(
+            std::format("Failed to load mixer on card \"{}\": {}", Card,
+                        snd_strerror(err)));
+
+    snd_mixer_selem_id_t * id = nullptr;
+    snd_mixer_selem_id_alloca(&id);
+    snd_mixer_selem_id_set_index(id, 0);
+    snd_mixer_selem_id_set_name(id, "Headphone");
+
+    snd_mixer_elem_t * elem = snd_mixer_find_selem(mixer, id);
+    if (!elem)
+        throw std::runtime_error(std::format(
+            "Failed to find simple element at sound card \"{}\"", Card));
+
+    bool connected = false;
+    for (snd_mixer_selem_channel_id_t chn :
+         {SND_MIXER_SCHN_FRONT_LEFT, SND_MIXER_SCHN_FRONT_RIGHT}) {
+        int psw = 0;
+
+        snd_mixer_selem_get_playback_switch(elem, chn, &psw);
+        connected |= psw;
+    }
+
+    return connected;
+}
