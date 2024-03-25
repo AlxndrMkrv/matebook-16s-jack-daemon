@@ -57,7 +57,7 @@ target_include_directories(alsa PRIVATE Headers)
 
 add_executable(${PROJECT_NAME} Sources/Main.cxx
                                Headers/Globals.hxx
-                               Headers/SignalPipe.hxx
+                               Headers/OutPipeEnd.hxx
                                Sources/FindDeviceNode.cxx
                                Headers/JackHandler.hxx
                                Sources/JackHandler.cxx
@@ -65,8 +65,11 @@ add_executable(${PROJECT_NAME} Sources/Main.cxx
 target_include_directories(${PROJECT_NAME} PRIVATE Headers)
 target_link_libraries(${PROJECT_NAME} posix alsa asound)
 
-add_custom_target(clang SOURCES .clang-format .clang-tidy)
-add_custom_target(README SOURCES README.md)
+add_custom_target(misc SOURCES .clang-format .clang-tidy
+                               README.md
+                               ${PROJECT_NAME}.service
+                               #package/PKGBUILD
+)
 
 # Tests
 

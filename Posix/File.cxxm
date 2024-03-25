@@ -2,7 +2,6 @@ module;
 
 #include <cerrno>
 #include <cstring>
-#include <exception>
 #include <fcntl.h>
 #include <filesystem>
 #include <format>

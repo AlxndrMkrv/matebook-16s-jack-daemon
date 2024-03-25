@@ -1,7 +1,6 @@
 module;
 
 #include <filesystem>
-#include <iostream>
 #include <linux/input.h>
 
 export module Posix:InputEvent;
@@ -12,10 +11,9 @@ export class InputEvent : public Pollable, public File {
 public:
     InputEvent(const std::filesystem::path & path, File::Access access,
                uint16_t type, uint16_t code);
-    virtual ~InputEvent() = default;
+    // virtual ~InputEvent();
 
     virtual void onEvent(int value) = 0;
-    // virtual void onFailure(std::string error) = 0;
 
     [[nodiscard]] int fd() const override { return static_cast<int>(*this); }
 
@@ -32,6 +30,8 @@ InputEvent::InputEvent(const std::filesystem::path & path, File::Access access,
     _type(type), _code(code)
 {
 }
+
+// InputEvent::~InputEvent() {}
 
 void InputEvent::onDataReady()
 {

@@ -1,6 +1,6 @@
 #include "Globals.hxx"
 #include "JackHandler.hxx"
-#include "SignalPipe.hxx"
+#include "OutPipeEnd.hxx"
 #include <filesystem>
 #include <format>
 #include <iostream>
@@ -20,7 +20,7 @@ extern fs::path find_device_node(const std::string_view devname_base,
 
 // Global pipes to transmit signal emittion from handler to poll() function
 Pipe sig_in_pipe{Pipe::Type::WRITE};
-SignalPipe sig_out_pipe;
+OutPipeEnd sig_out_pipe;
 
 void handle_signal(int signo)
 {
@@ -59,7 +59,7 @@ void setup_event_poll()
 
     // Get the current jack state from Alsa mixer
     // Suppose that the daemon is started at startup and jack switch is inverted
-    IsJackConnected() ? jh.onJackRemoved() : jh.onJackInserted();
+    IsJackConnected() ? jh.onJackInserted() : jh.onJackRemoved();
 
     // Run the event polling loop
     poll.runUntilTimeout();
