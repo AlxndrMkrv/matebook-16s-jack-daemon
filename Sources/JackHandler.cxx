@@ -1,5 +1,7 @@
 #include "JackHandler.hxx"
 #include "Globals.hxx"
+#include <format>
+#include <iostream>
 
 import Posix;
 
@@ -8,6 +10,25 @@ JackHandler::JackHandler(const std::filesystem::path & eventDev,
     InputEvent(eventDev, File::Access::READ, EventType, EventCode),
     _hdaDev(sndDev)
 {
+}
+
+void JackHandler::onEvent(const int value)
+{
+#ifdef __VERBOSE_LOG
+    std::cout << std::format("{}: onEvent({})", ProgramName, value)
+              << std::endl;
+#endif
+    value ? onJackInserted() : onJackRemoved();
+}
+
+void JackHandler::onInvalidEvent(const uint16_t type, const uint16_t code,
+                                 const int value)
+{
+#ifdef __VERBOSE_LOG
+    std::cout << std::format("{}: onInvalidEvent({}, {}, {})", ProgramName,
+                             type, code, value)
+              << std::endl;
+#endif
 }
 
 /**

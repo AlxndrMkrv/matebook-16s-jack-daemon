@@ -9,10 +9,9 @@ public:
     JackHandler(const std::filesystem::path & event_dev,
                 const std::filesystem::path & snd_dev);
 
-    inline void onEvent(int value) override
-    {
-        value ? onJackInserted() : onJackRemoved();
-    }
+    void onEvent(const int value) override;
+    void onInvalidEvent(const uint16_t type, const uint16_t code,
+                        const int value) override;
 
     void onJackInserted();
     void onJackRemoved();

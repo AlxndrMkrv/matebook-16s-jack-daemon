@@ -1,0 +1,18 @@
+pkgname=@PROJECT_NAME@
+pkgver=@PROJECT_VERSION@
+pkgrel=1
+pkgdesc="HUAWEI MateBook 16s SN6140 audio SoC reconfigurator"
+arch=("@CMAKE_SYSTEM_PROCESSOR@")
+url="https://github.com/AlxndrMkrv/matebook-16s-jack-daemon"
+license=("MIT")
+depends=("alsa-lib" "sof-firmware")
+makedepends=("git" "cmake" "ninja" "clang")
+options=(!buildflags !makeflags !debug)
+
+package() {
+    install -D -m755 "${startdir}/${pkgname}" \
+                     "${pkgdir}/usr/bin/${pkgname}"
+    install -D -m644 "@CMAKE_SOURCE_DIR@/${pkgname}.service" \
+                     "${pkgdir}/usr/lib/systemd/system/${pkgname}.service"
+}
+

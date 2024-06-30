@@ -3,8 +3,11 @@ Description=HUAWEI MateBook 16s SN6140 audio SoC reconfigurator
 
 [Service]
 ExecStart=/usr/bin/matebook-16s-jack-daemon
+StandardOutput=journal
+StandardError=journal
 Restart=always
 User=root
 
 [Install]
 WantedBy=multi-user.target
+

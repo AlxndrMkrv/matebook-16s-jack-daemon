@@ -11,9 +11,14 @@ export class InputEvent : public Pollable, public File {
 public:
     InputEvent(const std::filesystem::path & path, File::Access access,
                uint16_t type, uint16_t code);
-    // virtual ~InputEvent();
 
-    virtual void onEvent(int value) = 0;
+    virtual void onEvent(const int value) = 0;
+
+    // This handler is supposed to be overridden only for debug reasons
+    virtual void onInvalidEvent(const uint16_t type, const uint16_t code,
+                                const int value)
+    {
+    }
 
     [[nodiscard]] int fd() const override { return static_cast<int>(*this); }
 
@@ -31,8 +36,6 @@ InputEvent::InputEvent(const std::filesystem::path & path, File::Access access,
 {
 }
 
-// InputEvent::~InputEvent() {}
-
 void InputEvent::onDataReady()
 {
     input_event event{};
@@ -40,4 +43,6 @@ void InputEvent::onDataReady()
 
     if (event.type == _type && event.code == _code)
         onEvent(event.value);
+    else
+        onInvalidEvent(event.type, event.code, event.value);
 }

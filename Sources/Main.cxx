@@ -24,11 +24,11 @@ OutPipeEnd sig_out_pipe;
 
 void handle_signal(int signo)
 {
-    std::string msg = std::format("Signal {} received", Signal::SigName(signo));
+    const std::string msg =
+        std::format("Signal {} received", Signal::SigName(signo));
     sig_in_pipe.write(msg);
 }
 
-// The function will setup
 void setup_event_poll()
 {
     // Block all signals
@@ -61,6 +61,12 @@ void setup_event_poll()
     // Suppose that the daemon is started at startup and jack switch is inverted
     IsJackConnected() ? jh.onJackInserted() : jh.onJackRemoved();
 
+#ifdef __VERBOSE_LOG
+    std::cout << std::format("{}: jack is {}", ProgramName,
+                             IsJackConnected() ? "connected" : "disconnected")
+              << std::endl;
+#endif
+
     // Run the event polling loop
     poll.runUntilTimeout();
 
@@ -75,7 +81,9 @@ int main()
         setup_event_poll();
     }
     catch (const std::runtime_error & e) {
-        std::cerr << e.what() << std::endl;
+        std::cerr << std::format("{} stopped by exception: {}", ProgramName,
+                                 e.what())
+                  << std::endl;
         return 1;
     }
 }
