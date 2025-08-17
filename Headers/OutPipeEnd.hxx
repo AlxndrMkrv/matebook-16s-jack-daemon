@@ -1,13 +1,14 @@
 #pragma once
 
-#include <exception>
+#include <stdexcept>
 #include <string>
 
 import Posix;
 
-class OutPipeEnd : public Pollable, public Pipe {
+class OutPipeEnd : public matebook::posix::Pollable,
+                   public matebook::posix::Pipe {
 public:
-    OutPipeEnd() : Pipe(Pipe::Type::READ) {}
+    OutPipeEnd() : Pipe(matebook::posix::Pipe::Type::READ) {}
     int fd() const override { return static_cast<int>(*this); }
 
     // Pollable interface implementation

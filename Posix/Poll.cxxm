@@ -1,74 +1,63 @@
 module;
 
 #include <array>
+#include <chrono>
 #include <cstddef>
-// #include <cstdint>
-#include <iostream>
 #include <poll.h>
 
 export module Posix:Poll;
 import :Pollable;
 
-export template <size_t N>
+export namespace matebook::posix {
+
+template <size_t N>
 class Poll {
+    std::array<Pollable *, N> _fds;
+    std::array<pollfd, N> _pfds;
+    std::chrono::milliseconds _timeout;
+
 public:
     enum class Result { FAILURE = -1, TIMEOUT, GOT_EVENT };
 
-    explicit Poll(const std::array<Pollable *, N> & fds, int timeout_ms = -1);
-
-    Result runOnce();
-
-    void runUntilTimeout();
-    void runUntilFailure();
-
-private:
-    std::array<Pollable *, N> _fds;
-    std::array<pollfd, N> _pfds;
-    int _timeout;
-};
-
-template <size_t N>
-Poll<N>::Poll(const std::array<Pollable *, N> & fds, const int timeout_ms) :
-    _fds{fds}, _timeout(timeout_ms)
-{
-    size_t i = 0;
-    for (Pollable * p : fds)
-        _pfds[i++] = {p->fd(), POLLIN};
-}
-
-template <size_t N>
-Poll<N>::Result Poll<N>::runOnce()
-{
-    int ret = poll(&_pfds[0], N, _timeout);
-
-    if (ret > 0) {
-        for (int i = 0; i < N; ++i) {
-            if (_pfds[i].revents & POLLIN) {
-                _fds[i]->onDataReady();
-            }
+    Poll(std::initializer_list<Pollable *> fds,
+         std::chrono::milliseconds timeout = std::chrono::milliseconds{-1}) :
+        _timeout(timeout) {
+        size_t i{};
+        for (Pollable * p : fds) {
+            _fds[i] = p;
+            _pfds[i++] = {p->fd(), POLLIN};
         }
+    }
+
+    Result runOnce() {
+        auto ret = poll(&_pfds[0], N, _timeout.count());
+
+        if (!ret)
+            return Result::TIMEOUT;
+
+        if (ret < 0)
+            return Result::FAILURE;
+
+        for (int i = 0; i < N; ++i)
+            if (_pfds[i].revents & POLLIN)
+                _fds[i]->onDataReady();
+
         return Result::GOT_EVENT;
     }
-    else if (ret == 0)
-        return Result::TIMEOUT;
-    else [[unlikely]]
-        return Result::FAILURE;
-}
 
-template <size_t N>
-void Poll<N>::runUntilTimeout()
-{
-    Result result{Result::FAILURE};
+    void runUntilTimeout() {
+        Result result{Result::FAILURE};
 
-    while (result != Result::TIMEOUT)
-        result = runOnce();
-}
+        while (result != Result::TIMEOUT)
+            result = runOnce();
+    }
 
-template <size_t N>
-void Poll<N>::runUntilFailure()
-{
-    Result result{Result::TIMEOUT};
+    void runUntilFailure() {
+        Result result{Result::TIMEOUT};
 
-    while (result != Result::FAILURE)
-        result = runOnce();
-}
+        while (result != Result::FAILURE)
+            result = runOnce();
+    }
+};
+
+} // namespace matebook::posix

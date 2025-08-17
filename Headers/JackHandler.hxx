@@ -4,7 +4,7 @@
 
 import Posix;
 
-class JackHandler : public InputEvent {
+class JackHandler : public matebook::posix::InputEvent {
 public:
     JackHandler(const std::filesystem::path & event_dev,
                 const std::filesystem::path & snd_dev);
@@ -17,5 +17,5 @@ public:
     void onJackRemoved();
 
 private:
-    HdaDevice _hdaDev;
+    matebook::posix::HdaDevice _hdaDev;
 };

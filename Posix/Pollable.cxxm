@@ -2,9 +2,12 @@ module;
 
 export module Posix:Pollable;
 
-export class Pollable {
-public:
+export namespace matebook::posix {
 
+class Pollable {
+public:
     [[nodiscard]] virtual int fd() const = 0;
     virtual void onDataReady() = 0;
 };
+
+} // namespace matebook::posix

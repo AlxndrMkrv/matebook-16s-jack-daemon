@@ -2,6 +2,8 @@
 
 import Posix;
 
+using namespace matebook::posix;
+
 int main()
 {
     Pipe in{Pipe::Type::WRITE};

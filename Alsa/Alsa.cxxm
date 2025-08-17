@@ -2,8 +2,6 @@ module;
 
 // Headers must be included in a certain order
 // clang-format off
-#include <cstdio>
-#include <cstring>
 #include <alsa/global.h>
 #include <alsa/error.h>
 #include <alsa/input.h>
@@ -12,7 +10,6 @@ module;
 #include <alsa/control.h>
 #include <alsa/pcm.h>
 #include <alsa/mixer.h>
-#include <exception>
 #include <format>
 // clang-format on
 
@@ -20,8 +17,9 @@ export module Alsa;
 
 constexpr const char * const Card = "default";
 
-export bool IsJackConnected()
-{
+export namespace matebook::alsa {
+
+bool IsJackConnected() {
     snd_mixer_t * mixer = nullptr;
     int err = 0;
     if ((err = snd_mixer_open(&mixer, 0)) < 0)
@@ -48,7 +46,7 @@ export bool IsJackConnected()
     snd_mixer_selem_id_set_name(id, "Headphone");
 
     snd_mixer_elem_t * elem = snd_mixer_find_selem(mixer, id);
-    if (!elem)
+    if (elem == nullptr)
         throw std::runtime_error(std::format(
             "Failed to find simple element at sound card \"{}\"", Card));
 
@@ -63,3 +61,5 @@ export bool IsJackConnected()
 
     return connected;
 }
+
+} // namespace matebook::alsa

@@ -7,42 +7,36 @@ export module Posix:InputEvent;
 import :File;
 import :Pollable;
 
-export class InputEvent : public Pollable, public File {
+export namespace matebook::posix {
+
+class InputEvent : public Pollable, public File {
+    uint16_t _type{};
+    uint16_t _code{};
+
 public:
     InputEvent(const std::filesystem::path & path, File::Access access,
-               uint16_t type, uint16_t code);
+               uint16_t type, uint16_t code) :
+        File(path, access), _type(type), _code(code) {}
 
     virtual void onEvent(const int value) = 0;
 
     // This handler is supposed to be overridden only for debug reasons
     virtual void onInvalidEvent(const uint16_t type, const uint16_t code,
-                                const int value)
-    {
+                                const int value) {}
+
+    [[nodiscard]] int fd() const override {
+        return static_cast<int>(*this);
     }
 
-    [[nodiscard]] int fd() const override { return static_cast<int>(*this); }
+    void onDataReady() final {
+        input_event event{};
+        read(event);
 
-    void onDataReady() final;
-
-private:
-    uint16_t _type;
-    uint16_t _code;
+        if (event.type == _type && event.code == _code)
+            onEvent(event.value);
+        else
+            onInvalidEvent(event.type, event.code, event.value);
+    }
 };
 
-InputEvent::InputEvent(const std::filesystem::path & path, File::Access access,
-                       uint16_t type, uint16_t code) :
-    File(path, access),
-    _type(type), _code(code)
-{
-}
-
-void InputEvent::onDataReady()
-{
-    input_event event{};
-    read(event);
-
-    if (event.type == _type && event.code == _code)
-        onEvent(event.value);
-    else
-        onInvalidEvent(event.type, event.code, event.value);
-}
+} // namespace matebook::posix
